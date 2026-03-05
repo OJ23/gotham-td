@@ -7,6 +7,7 @@ const heroSchema = new mongoose.Schema(
     power: { type: String, required: true },
     description: { type: String, default: '' },
     image: { type: String, default: '' },
+    imagePublicId: { type: String, default: '' },
     city: { type: String, default: 'Gotham' },
   },
   { timestamps: true },

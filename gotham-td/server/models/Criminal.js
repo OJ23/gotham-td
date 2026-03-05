@@ -7,6 +7,7 @@ const criminalSchema = new mongoose.Schema(
     crimeType: { type: String, required: true },
     description: { type: String, default: '' },
     image: { type: String, default: '' },
+    imagePublicId: { type: String, default: '' },
     threatLevel: {
       type: String,
       enum: ['Low', 'Medium', 'High', 'Extreme'],

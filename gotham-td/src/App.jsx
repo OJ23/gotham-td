@@ -7,6 +7,7 @@ const initialHeroForm = {
   power: '',
   description: '',
   image: '',
+  imagePublicId: '',
   city: 'Gotham',
 }
 
@@ -16,6 +17,7 @@ const initialCriminalForm = {
   crimeType: '',
   description: '',
   image: '',
+  imagePublicId: '',
   threatLevel: 'Medium',
 }
 
@@ -24,6 +26,9 @@ function App() {
   const [criminals, setCriminals] = useState([])
   const [heroForm, setHeroForm] = useState(initialHeroForm)
   const [criminalForm, setCriminalForm] = useState(initialCriminalForm)
+  const [heroImageFile, setHeroImageFile] = useState(null)
+  const [criminalImageFile, setCriminalImageFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -57,14 +62,40 @@ function App() {
     loadData()
   }, [])
 
+  const uploadImage = async (file, category) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    formData.append('category', category)
+
+    const res = await fetch('/api/uploads/image', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to upload image to Cloudinary')
+    }
+
+    return res.json()
+  }
+
   const addHero = async (e) => {
     e.preventDefault()
     try {
       setError('')
+      setUploading(true)
+      const payload = { ...heroForm }
+
+      if (heroImageFile) {
+        const uploadResult = await uploadImage(heroImageFile, 'heroes')
+        payload.image = uploadResult.image
+        payload.imagePublicId = uploadResult.imagePublicId
+      }
+
       const res = await fetch('/api/heroes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(heroForm),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) {
@@ -74,8 +105,11 @@ function App() {
       const created = await res.json()
       setHeroes((prev) => [created, ...prev])
       setHeroForm(initialHeroForm)
+      setHeroImageFile(null)
     } catch (err) {
       setError(err.message)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -83,10 +117,19 @@ function App() {
     e.preventDefault()
     try {
       setError('')
+      setUploading(true)
+      const payload = { ...criminalForm }
+
+      if (criminalImageFile) {
+        const uploadResult = await uploadImage(criminalImageFile, 'criminals')
+        payload.image = uploadResult.image
+        payload.imagePublicId = uploadResult.imagePublicId
+      }
+
       const res = await fetch('/api/criminals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(criminalForm),
+        body: JSON.stringify(payload),
       })
 
       if (!res.ok) {
@@ -96,8 +139,11 @@ function App() {
       const created = await res.json()
       setCriminals((prev) => [created, ...prev])
       setCriminalForm(initialCriminalForm)
+      setCriminalImageFile(null)
     } catch (err) {
       setError(err.message)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -167,16 +213,23 @@ function App() {
             />
             <input
               type="url"
-              placeholder="Image URL"
+              placeholder="Image URL (optional)"
               value={heroForm.image}
               onChange={(e) => setHeroForm((p) => ({ ...p, image: e.target.value }))}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
             />
             <input
               placeholder="City"
               value={heroForm.city}
               onChange={(e) => setHeroForm((p) => ({ ...p, city: e.target.value }))}
             />
-            <button type="submit">Add Hero</button>
+            <button type="submit" disabled={uploading}>
+              {uploading ? 'Uploading...' : 'Add Hero'}
+            </button>
           </form>
 
           <ul className="list">
@@ -232,11 +285,16 @@ function App() {
             />
             <input
               type="url"
-              placeholder="Image URL"
+              placeholder="Image URL (optional)"
               value={criminalForm.image}
               onChange={(e) =>
                 setCriminalForm((p) => ({ ...p, image: e.target.value }))
               }
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setCriminalImageFile(e.target.files?.[0] || null)}
             />
             <select
               value={criminalForm.threatLevel}
@@ -249,7 +307,9 @@ function App() {
               <option>High</option>
               <option>Extreme</option>
             </select>
-            <button type="submit">Add Criminal</button>
+            <button type="submit" disabled={uploading}>
+              {uploading ? 'Uploading...' : 'Add Criminal'}
+            </button>
           </form>
 
           <ul className="list">

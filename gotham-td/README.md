@@ -1,12 +1,29 @@
-# React + Vite
+# Gotham Registry
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend with an Express + MongoDB API for heroes and criminals.
 
-Currently, two official plugins are available:
+## Cloudinary image upload setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Install dependencies:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2. Create `gotham-td/.env` from `.env.example` and set:
+
+```env
+MONGO_URI=mongodb://127.0.0.1:27017/gotham_registry
+PORT=4000
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+3. Start frontend and backend together:
+
+```bash
+npm run dev:all
+```
+
+When you upload an image from the form, the file is sent to Cloudinary via `/api/uploads/image`. The resulting `image` URL and `imagePublicId` are saved in MongoDB.
