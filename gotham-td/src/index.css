@@ -2,8 +2,21 @@
   box-sizing: border-box;
 }
 
+:root {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   min-width: 320px;
+  color: #ecf3ff;
+  background:
+    radial-gradient(circle at top left, rgba(40, 76, 148, 0.2), transparent 24%),
+    radial-gradient(circle at top right, rgba(15, 31, 69, 0.26), transparent 22%),
+    linear-gradient(180deg, #04070f 0%, #070b14 100%);
+  font-family: 'Manrope', 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+a {
+  color: inherit;
 }

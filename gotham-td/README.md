@@ -10,7 +10,7 @@ React + Vite frontend with an Express + MongoDB API for heroes and criminals.
 npm install
 ```
 
-2. Create `gotham-td/.env` from `.env.example` and set:
+2. Create `gotham-td/.env` and set:
 
 ```env
 MONGO_URI=mongodb://127.0.0.1:27017/gotham_registry

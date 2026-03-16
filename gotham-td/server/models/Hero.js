@@ -4,6 +4,7 @@ const heroSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     alias: { type: String, required: true },
+    role: { type: String, required: true },
     power: { type: String, required: true },
     description: { type: String, default: '' },
     image: { type: String, default: '' },

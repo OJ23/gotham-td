@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1600" role="img" aria-labelledby="title desc">
+  <title id="title">Gotham tactical district map</title>
+  <desc id="desc">Stylized city map with district blocks for Leaflet image overlay.</desc>
+  <rect width="1000" height="1600" fill="#6675a6" />
+  <g fill="#6c8d45" stroke="#22311d" stroke-width="6">
+    <path d="M280 150 L720 190 L805 260 L830 420 L760 515 L660 580 L680 740 L830 870 L850 1030 L790 1195 L650 1440 L330 1455 L210 1280 L175 1090 L205 870 L170 720 L205 520 L210 330 Z" />
+    <path d="M165 370 L95 435 L110 565 L175 610 L205 540 Z" />
+    <path d="M785 1175 L920 1225 L915 1390 L800 1450 L710 1370 Z" />
+  </g>
+  <g fill="#263148" stroke="#111827" stroke-width="10" opacity="0.92">
+    <path d="M250 260 L680 300" />
+    <path d="M345 210 L365 1330" />
+    <path d="M520 240 L545 1360" />
+    <path d="M705 260 L690 1310" />
+    <path d="M210 540 L810 520" />
+    <path d="M210 770 L820 760" />
+    <path d="M215 1030 L790 1005" />
+    <path d="M250 1245 L725 1210" />
+  </g>
+  <g stroke="#1d2433" stroke-width="6">
+    <rect x="290" y="250" width="230" height="250" rx="18" fill="#2ea66e" />
+    <rect x="520" y="300" width="210" height="220" rx="18" fill="#3f3f3f" />
+    <rect x="185" y="255" width="105" height="145" rx="18" fill="#27dce8" />
+    <rect x="690" y="505" width="110" height="110" rx="18" fill="#ff22ef" />
+    <rect x="735" y="615" width="125" height="185" rx="18" fill="#1e58f1" />
+    <rect x="405" y="715" width="165" height="140" rx="18" fill="#861eff" />
+    <rect x="225" y="700" width="130" height="145" rx="18" fill="#f4ed18" />
+    <rect x="590" y="865" width="165" height="180" rx="18" fill="#ff9a16" />
+    <rect x="205" y="980" width="160" height="175" rx="18" fill="#26ff1a" />
+    <rect x="360" y="875" width="190" height="350" rx="18" fill="#b7f4ad" />
+    <rect x="640" y="1080" width="175" height="185" rx="18" fill="#ff1a1a" />
+    <rect x="370" y="1210" width="200" height="110" rx="18" fill="#8a31ab" />
+    <rect x="280" y="1285" width="205" height="115" rx="18" fill="#bb1ef3" />
+  </g>
+  <g fill="#dce4f5" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">
+    <text x="405" y="380">OTISBURG</text>
+    <text x="625" y="400">BURNLEY</text>
+    <text x="240" y="345">CHERRY</text>
+    <text x="240" y="377">HILLS</text>
+    <text x="745" y="572">CRIME</text>
+    <text x="745" y="604">ALLEY</text>
+    <text x="798" y="710">BOWERY</text>
+    <text x="488" y="785">COVENTRY</text>
+    <text x="675" y="960">UPPER EAST</text>
+    <text x="675" y="992">SIDE</text>
+    <text x="284" y="1070">UPPER WEST</text>
+    <text x="284" y="1102">SIDE</text>
+    <text x="452" y="1030">ROBINSON</text>
+    <text x="452" y="1062">PARK</text>
+    <text x="726" y="1188">CITY HALL</text>
+    <text x="470" y="1278">DIAMOND</text>
+    <text x="470" y="1310">DISTRICT</text>
+    <text x="384" y="1360">OLD GOTHAM</text>
+  </g>
+  <g fill="#0c1220" opacity="0.2">
+    <circle cx="515" cy="1010" r="65" />
+    <circle cx="785" cy="1360" r="42" />
+    <circle cx="150" cy="120" r="48" />
+  </g>
+</svg>
