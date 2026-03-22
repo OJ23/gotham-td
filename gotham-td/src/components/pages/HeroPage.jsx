@@ -33,6 +33,7 @@ export default function HeroPage({
   loading,
   openHeroEditor,
   confirmDelete,
+  onCharacterSelect,
 }) {
   const heroColumns = [
     {
@@ -41,9 +42,12 @@ export default function HeroPage({
       key: 'alias',
       sorter: (a, b) => a.alias.localeCompare(b.alias),
       render: (value, record) => (
-        <Space>
+        <Space align="start">
           {record.image ? <Avatar src={record.image} shape="square" /> : <Avatar shape="square" icon={<UserOutlined />} />}
-          <strong>{value}</strong>
+          <div>
+            <strong>{value}</strong>
+            {record.createdByName ? <div><Text type="secondary">Created by {record.createdByName}</Text></div> : null}
+          </div>
         </Space>
       ),
     },
@@ -65,7 +69,6 @@ export default function HeroPage({
                 key: 'edit',
                 icon: <EditOutlined />,
                 label: 'Edit',
-                disabled: !isPrivilegedUser,
                 onClick: () => openHeroEditor(record),
               },
               {
@@ -79,7 +82,7 @@ export default function HeroPage({
             ],
           }}
         >
-          <Button icon={<MoreOutlined />} />
+          <Button icon={<MoreOutlined />} onClick={(event) => event.stopPropagation()} />
         </Dropdown>
       ),
     },
@@ -213,6 +216,10 @@ export default function HeroPage({
               pagination={{ pageSize: 8, showSizeChanger: false }}
               scroll={{ x: 860 }}
               locale={{ emptyText: <Empty description={showSearchMiss ? 'Oops, character not found' : 'No heroes found'} /> }}
+              onRow={(record) => ({
+                onClick: () => onCharacterSelect('hero', record),
+                className: 'clickable-row',
+              })}
             />
           </Card>
         </div>

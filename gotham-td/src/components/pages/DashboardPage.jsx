@@ -11,6 +11,7 @@ export default function DashboardPage({
   recentColumns,
   loadData,
   onJumpToForm,
+  onCharacterSelect,
 }) {
   return (
     <div className="container-fluid p-0">
@@ -57,10 +58,14 @@ export default function DashboardPage({
                 items={activityItems.map((item) => ({
                   color: item.itemType === 'hero' ? 'green' : 'red',
                   content: (
-                    <span>
+                    <button
+                      type="button"
+                      className="record-link-button"
+                      onClick={() => onCharacterSelect(item.itemType, item)}
+                    >
                       <strong>{item.alias}</strong> added to{' '}
                       {item.itemType === 'hero' ? 'hero registry' : 'criminal watch list'}
-                    </span>
+                    </button>
                   ),
                 }))}
               />
@@ -70,7 +75,7 @@ export default function DashboardPage({
           </Card>
         </div>
         <div className="col-12 col-xl-4">
-          <Card title="KPI Overview" className="h-100">
+          <Card title="Overview" className="h-100">
             <div className="d-grid gap-3">
               <div>
                 <Text>Hero/Criminal Balance</Text>
@@ -132,6 +137,10 @@ export default function DashboardPage({
               columns={recentColumns}
               pagination={{ pageSize: 5, showSizeChanger: false }}
               locale={{ emptyText: <Empty description="No records found" /> }}
+              onRow={(record) => ({
+                onClick: () => onCharacterSelect(record.type === 'Hero' ? 'hero' : 'criminal', record.source),
+                className: 'clickable-row',
+              })}
             />
           </Card>
         </div>

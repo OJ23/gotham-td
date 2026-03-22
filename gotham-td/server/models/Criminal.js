@@ -9,11 +9,17 @@ const criminalSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     image: { type: String, default: '' },
     imagePublicId: { type: String, default: '' },
+    mapPoint: {
+      x: { type: Number, default: null },
+      y: { type: Number, default: null },
+    },
     threatLevel: {
       type: String,
       enum: ['Low', 'Medium', 'High', 'Extreme'],
       default: 'Medium',
     },
+    createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    createdByName: { type: String, default: '' },
   },
   { timestamps: true },
 )

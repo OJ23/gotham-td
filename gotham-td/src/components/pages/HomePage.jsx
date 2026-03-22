@@ -11,6 +11,7 @@ export default function HomePage({
   heroes,
   criminals,
   setActivePage,
+  onCharacterSelect,
 }) {
   return (
     <div className="home-page">
@@ -56,7 +57,12 @@ export default function HomePage({
                 <div key={`slide-${index}`} className="registry-carousel-slide">
                   <div className="registry-carousel-grid">
                     {slide.map((item) => (
-                      <Card key={item.key} className="registry-carousel-card" variant="borderless">
+                      <Card
+                        key={item.key}
+                        className="registry-carousel-card clickable-card"
+                        variant="borderless"
+                        onClick={() => onCharacterSelect(item.type === 'Hero' ? 'hero' : 'criminal', item.source)}
+                      >
                         <div className="registry-carousel-media">
                           {item.image ? (
                             <img src={item.image} alt={item.alias} className="registry-carousel-image" />

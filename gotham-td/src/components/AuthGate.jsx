@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card, Typography } from 'antd'
 import AuthScreen from './AuthScreen.jsx'
 import {
@@ -10,16 +10,33 @@ import {
 const { Text } = Typography
 
 export default function AuthGate({ children, messageApi, notificationApi }) {
-  const [authToken, setAuthToken] = useState(() => getStoredAuthToken())
+  const initialToken = getStoredAuthToken()
+  const restoredInitialSessionRef = useRef(Boolean(initialToken))
+  const [authToken, setAuthToken] = useState(() => initialToken)
   const [currentUser, setCurrentUser] = useState(null)
   const [authMode, setAuthMode] = useState('login')
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' })
   const [authError, setAuthError] = useState('')
-  const [authChecking, setAuthChecking] = useState(Boolean(getStoredAuthToken()))
+  const [authChecking, setAuthChecking] = useState(Boolean(initialToken))
   const [authSubmitting, setAuthSubmitting] = useState(false)
+
+  const showRoleWelcome = useCallback(
+    (user) => {
+      if (!user || user.role !== 'user') {
+        return
+      }
+
+      notificationApi.info({
+        message: 'Signed in as standard user',
+        description: 'You can create and edit records. Delete actions remain restricted.',
+      })
+    },
+    [notificationApi],
+  )
 
   const resetSessionState = useCallback(() => {
     clearStoredAuthToken()
+    restoredInitialSessionRef.current = false
     setAuthToken('')
     setCurrentUser(null)
     setAuthChecking(false)
@@ -64,15 +81,19 @@ export default function AuthGate({ children, messageApi, notificationApi }) {
         const data = await res.json()
         setCurrentUser(data.user)
         setAuthError('')
+        if (restoredInitialSessionRef.current) {
+          showRoleWelcome(data.user)
+        }
       } catch {
         resetSessionState()
       } finally {
+        restoredInitialSessionRef.current = false
         setAuthChecking(false)
       }
     }
 
     restoreSession()
-  }, [authFetch, authToken, resetSessionState])
+  }, [authFetch, authToken, resetSessionState, showRoleWelcome])
 
   const handleAuthFieldChange = useCallback((field, value) => {
     setAuthForm((prev) => ({ ...prev, [field]: value }))
@@ -103,6 +124,7 @@ export default function AuthGate({ children, messageApi, notificationApi }) {
         }
 
         setStoredAuthToken(data.token)
+        restoredInitialSessionRef.current = false
         setAuthToken(data.token)
         setCurrentUser(data.user)
         setAuthForm({ name: '', email: '', password: '' })
@@ -111,13 +133,14 @@ export default function AuthGate({ children, messageApi, notificationApi }) {
           message: authMode === 'login' ? 'Signed in' : 'Account created',
           description: `${data.user.name} is now authenticated as ${data.user.role}.`,
         })
+        showRoleWelcome(data.user)
       } catch (err) {
         setAuthError(err.message)
       } finally {
         setAuthSubmitting(false)
       }
     },
-    [authForm, authMode, notificationApi],
+    [authForm, authMode, notificationApi, showRoleWelcome],
   )
 
   const handleLogout = useCallback(async () => {

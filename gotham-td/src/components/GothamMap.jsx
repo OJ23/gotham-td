@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 
 const MAP_WIDTH = 1600
@@ -7,6 +7,7 @@ const MAP_BOUNDS = [
   [0, 0],
   [MAP_HEIGHT, MAP_WIDTH],
 ]
+const DEFAULT_OVERLAY_OPACITY = 0.44
 
 const BASE_MAP_URL = '/images/13.png'
 const TACTICAL_OVERLAY_URL = '/images/11-overlay.png'
@@ -36,6 +37,35 @@ const threatColorMap = {
   Medium: '#1677ff',
   High: '#fa8c16',
   Extreme: '#ff4d4f',
+}
+const hoverImageMap = {
+  batman: '/mapimage/batman01.jpeg',
+  batmanbeyond: '/mapimage/batman beyond01.jpeg',
+  terrymcginnis: '/mapimage/batman beyond01.jpeg',
+  batwoman: '/mapimage/batwoman01.jpeg',
+  blackmask: '/mapimage/blackmask01.jpeg',
+  catwoman: '/mapimage/catwoman01.jpeg',
+  deadshot: '/mapimage/deadshot01.jpeg',
+  etrigan: '/mapimage/etriggan01.jpeg',
+  etriggan: '/mapimage/etriggan01.jpeg',
+  commissionergordon: '/mapimage/comissionergordon01.jpeg',
+  jimgordon: '/mapimage/comissionergordon01.jpeg',
+  harleyquinn: '/mapimage/harleyquinn01.jpeg',
+  joker: '/mapimage/joker01.jpeg',
+  luciusfox: '/mapimage/lucius fox 01.jpeg',
+  nightwing: '/mapimage/nightwing01.jpeg',
+  poisonivy: '/mapimage/poisonivy01.jpeg',
+  ragman: '/mapimage/ragman01.jpeg',
+  redrobin: '/mapimage/redrobin01.jpeg',
+  newredrobin: '/mapimage/redrobin01.jpeg',
+  robin: '/mapimage/robin01.jpeg',
+  newrobin: '/mapimage/robin01.jpeg',
+  scarecrow: '/mapimage/scarecrow01.jpeg',
+  siralfred: '/mapimage/siralfred01.jpeg',
+  alfred: '/mapimage/siralfred01.jpeg',
+  alfredpennyworth: '/mapimage/siralfred01.jpeg',
+  zatanna: '/mapimage/zatanna02.jpeg',
+  zatnna: '/mapimage/zatanna02.jpeg',
 }
 
 const scaleY = MAP_HEIGHT / 1600
@@ -79,8 +109,105 @@ const criminalDistrictMap = {
   'Harley Quinn': 'Old Gotham',
 }
 
+const districtNameLookup = Object.keys(districtAnchors).reduce((lookup, districtName) => {
+  lookup[districtName.toLowerCase()] = districtName
+  return lookup
+}, {})
+
+function resolveDistrictName(value, fallback = 'Gotham') {
+  const normalizedValue = String(value || '').trim().toLowerCase()
+  return districtNameLookup[normalizedValue] || fallback
+}
+
+function isValidMapPoint(mapPoint) {
+  return (
+    mapPoint &&
+    Number.isFinite(mapPoint.x) &&
+    Number.isFinite(mapPoint.y) &&
+    mapPoint.x >= 0 &&
+    mapPoint.x <= MAP_WIDTH &&
+    mapPoint.y >= 0 &&
+    mapPoint.y <= MAP_HEIGHT
+  )
+}
+
+function normalizeMapPoint(mapPoint) {
+  if (!isValidMapPoint(mapPoint)) {
+    return null
+  }
+
+  return {
+    x: Math.round(mapPoint.x),
+    y: Math.round(mapPoint.y),
+  }
+}
+
 function toPoint([y, x]) {
   return L.latLng(y, x)
+}
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function resolveAffiliation(record, type) {
+  if (type === 'hero') {
+    return record.role || 'Independent vigilante'
+  }
+
+  return record.crimeType || 'Independent operator'
+}
+
+function normalizeHoverImageKey(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]/g, '')
+}
+
+function resolveHoverImage(record) {
+  const aliasKey = normalizeHoverImageKey(record.alias)
+  const nameKey = normalizeHoverImageKey(record.name)
+  const directMatch = hoverImageMap[aliasKey] || hoverImageMap[nameKey]
+
+  if (directMatch) {
+    return directMatch
+  }
+
+  const candidateKeys = [aliasKey, nameKey].filter(Boolean)
+  const fuzzyMatchKey = Object.keys(hoverImageMap).find(
+    (key) =>
+      candidateKeys.some((candidate) => candidate.includes(key) || key.includes(candidate)),
+  )
+
+  return (fuzzyMatchKey ? hoverImageMap[fuzzyMatchKey] : '') || record.image || ''
+}
+
+function buildHoverProfileMarkup(record, type) {
+  const displayName = escapeHtml(record.alias || record.name || 'Unknown')
+  const affiliation = escapeHtml(resolveAffiliation(record, type))
+  const profileType = type === 'hero' ? 'Hero' : 'Criminal'
+  const fallbackLabel = escapeHtml((record.alias || record.name || '?').charAt(0).toUpperCase())
+  const hoverImage = resolveHoverImage(record)
+  const fallbackImage = record.image ? escapeHtml(record.image) : ''
+  const imageMarkup = hoverImage
+    ? `<div class="map-marker-card__media"><img src="${escapeHtml(hoverImage)}" alt="${displayName}" class="map-marker-card__image"${fallbackImage ? ` onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.closest('.map-marker-card__media').innerHTML='<span class=&quot;map-marker-card__fallback-label&quot;>${fallbackLabel}</span>';this.closest('.map-marker-card__media').classList.add('map-marker-card__media--fallback');}" data-fallback="${fallbackImage}"` : ` onerror="this.closest('.map-marker-card__media').innerHTML='<span class=&quot;map-marker-card__fallback-label&quot;>${fallbackLabel}</span>';this.closest('.map-marker-card__media').classList.add('map-marker-card__media--fallback');"`} /></div>`
+    : `<div class="map-marker-card__media map-marker-card__media--fallback"><span class="map-marker-card__fallback-label">${fallbackLabel}</span></div>`
+
+  return `
+    <div class="map-marker-card">
+      ${imageMarkup}
+      <div class="map-marker-card__content">
+        <p class="map-marker-card__eyebrow">${profileType}</p>
+        <p class="map-marker-card__name">${displayName}</p>
+        <p class="map-marker-card__meta">Affiliation</p>
+        <p class="map-marker-card__affiliation">${affiliation}</p>
+      </div>
+    </div>
+  `
 }
 
 function buildRecordPoint(index, total, basePoint) {
@@ -90,44 +217,108 @@ function buildRecordPoint(index, total, basePoint) {
   return [basePoint[0] + Math.sin(angle) * radius, basePoint[1] + Math.cos(angle) * radius]
 }
 
-export default function GothamMap({ heroes, criminals }) {
-  const [overlayOpacity, setOverlayOpacity] = useState(0.44)
+function resolveFallbackDistrict(record, type) {
+  if (type === 'hero') {
+    return resolveDistrictName(record.city, 'Gotham')
+  }
+
+  return resolveDistrictName(
+    record.zone,
+    resolveDistrictName(criminalDistrictMap[record.alias], 'Gotham'),
+  )
+}
+
+function resolveRecordPresentation(record, type, index, total) {
+  const districtName = resolveFallbackDistrict(record, type)
+  const basePoint = districtAnchors[districtName] || districtAnchors.Gotham
+  const fallbackPoint = buildRecordPoint(index, total, basePoint)
+  const customPoint = normalizeMapPoint(record.mapPoint)
+
+  return {
+    ...record,
+    districtName,
+    point: customPoint ? [customPoint.y, customPoint.x] : fallbackPoint,
+    fallbackPoint,
+    hasCustomPoint: Boolean(customPoint),
+    customPoint,
+  }
+}
+
+export default function GothamMap({ heroes, criminals, authFetch, loadData, messageApi }) {
+  const [overlayOpacity, setOverlayOpacity] = useState(DEFAULT_OVERLAY_OPACITY)
+  const [assignmentType, setAssignmentType] = useState('hero')
+  const [assignmentId, setAssignmentId] = useState('')
+  const [draftPoint, setDraftPoint] = useState(null)
+  const [savingPoint, setSavingPoint] = useState(false)
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
-  const baseOverlayRef = useRef(null)
   const tacticalOverlayRef = useRef(null)
   const heroLayerRef = useRef(null)
   const criminalLayerRef = useRef(null)
+  const selectionLayerRef = useRef(null)
 
   const mappedCriminals = useMemo(
     () =>
-      criminals.map((criminal, index) => {
-        const districtName = criminalDistrictMap[criminal.alias] || 'Gotham'
-        const basePoint = districtAnchors[districtName] || districtAnchors.Gotham
-        return {
-          ...criminal,
-          point: buildRecordPoint(index, criminals.length, basePoint),
-          displayColor:
-            LEGEND_COLOR_MAP[criminal.alias] || threatColorMap[criminal.threatLevel] || '#ff4d4f',
-          districtName,
-        }
-      }),
+      criminals.map((criminal, index) => ({
+        ...resolveRecordPresentation(criminal, 'criminal', index, criminals.length),
+        displayColor:
+          LEGEND_COLOR_MAP[criminal.alias] || threatColorMap[criminal.threatLevel] || '#ff4d4f',
+      })),
     [criminals],
   )
 
   const mappedHeroes = useMemo(
-    () =>
-      heroes.map((hero, index) => {
-        const districtName = districtAnchors[hero.city] ? hero.city : 'Gotham'
-        const basePoint = districtAnchors[districtName] || districtAnchors.Gotham
-        return {
-          ...hero,
-          point: buildRecordPoint(index, heroes.length, basePoint),
-          districtName,
-        }
-      }),
+    () => heroes.map((hero, index) => resolveRecordPresentation(hero, 'hero', index, heroes.length)),
     [heroes],
   )
+
+  const assignmentOptions = useMemo(
+    () =>
+      (assignmentType === 'hero' ? heroes : criminals).map((record) => ({
+        id: record._id,
+        label: `${record.alias} (${record.name})`,
+        record,
+      })),
+    [assignmentType, criminals, heroes],
+  )
+
+  const selectedAssignment = useMemo(
+    () => assignmentOptions.find((option) => option.id === assignmentId)?.record || null,
+    [assignmentId, assignmentOptions],
+  )
+
+  useEffect(() => {
+    if (!assignmentOptions.length) {
+      setAssignmentId('')
+      return
+    }
+
+    if (!assignmentOptions.some((option) => option.id === assignmentId)) {
+      setAssignmentId(assignmentOptions[0].id)
+    }
+  }, [assignmentId, assignmentOptions])
+
+  useEffect(() => {
+    if (!selectedAssignment) {
+      setDraftPoint(null)
+      return
+    }
+
+    const selectedIndex = assignmentOptions.findIndex((option) => option.id === selectedAssignment._id)
+    const fallbackPresentation = resolveRecordPresentation(
+      selectedAssignment,
+      assignmentType,
+      Math.max(selectedIndex, 0),
+      assignmentOptions.length,
+    )
+
+    setDraftPoint(
+      fallbackPresentation.customPoint || {
+        x: Math.round(fallbackPresentation.fallbackPoint[1]),
+        y: Math.round(fallbackPresentation.fallbackPoint[0]),
+      },
+    )
+  }, [assignmentOptions, assignmentType, selectedAssignment])
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
@@ -149,11 +340,13 @@ export default function GothamMap({ heroes, criminals }) {
     map.getPane('tactical-overlay').style.zIndex = 300
     map.createPane('markers')
     map.getPane('markers').style.zIndex = 450
+    map.createPane('selection')
+    map.getPane('selection').style.zIndex = 550
 
     mapRef.current = map
     map.setMaxBounds(MAP_BOUNDS)
 
-    baseOverlayRef.current = L.imageOverlay(BASE_MAP_URL, MAP_BOUNDS, {
+    L.imageOverlay(BASE_MAP_URL, MAP_BOUNDS, {
       alt: 'Gotham city base map',
       className: 'gotham-image-overlay',
       pane: 'base-map',
@@ -162,20 +355,32 @@ export default function GothamMap({ heroes, criminals }) {
     tacticalOverlayRef.current = L.imageOverlay(TACTICAL_OVERLAY_URL, MAP_BOUNDS, {
       alt: 'Gotham tactical district overlay',
       className: 'gotham-image-overlay tactical-overlay',
-      opacity: overlayOpacity,
+      opacity: DEFAULT_OVERLAY_OPACITY,
       pane: 'tactical-overlay',
     }).addTo(map)
 
     heroLayerRef.current = L.layerGroup([], { pane: 'markers' }).addTo(map)
     criminalLayerRef.current = L.layerGroup([], { pane: 'markers' }).addTo(map)
+    selectionLayerRef.current = L.layerGroup([], { pane: 'selection' }).addTo(map)
+
+    map.on('click', (event) => {
+      setDraftPoint({
+        x: Math.round(event.latlng.lng),
+        y: Math.round(event.latlng.lat),
+      })
+    })
 
     map.fitBounds(MAP_BOUNDS)
 
     return () => {
+      heroLayerRef.current = null
+      criminalLayerRef.current = null
+      selectionLayerRef.current = null
+      tacticalOverlayRef.current = null
       map.remove()
       mapRef.current = null
     }
-  }, [overlayOpacity])
+  }, [])
 
   useEffect(() => {
     tacticalOverlayRef.current?.setOpacity(overlayOpacity)
@@ -202,9 +407,12 @@ export default function GothamMap({ heroes, criminals }) {
         fillColor: '#2f54eb',
         fillOpacity: 0.95,
       })
-        .bindPopup(
-          `<strong>${hero.alias}</strong><br />Hero<br />Role: ${hero.role || 'Unknown'}<br />Zone: ${hero.city || hero.districtName}<br />Power: ${hero.power}`,
-        )
+        .bindTooltip(buildHoverProfileMarkup(hero, 'hero'), {
+          direction: 'top',
+          offset: [0, -12],
+          opacity: 1,
+          className: 'map-marker-tooltip',
+        })
         .addTo(heroLayer)
     })
 
@@ -217,14 +425,99 @@ export default function GothamMap({ heroes, criminals }) {
         fillColor: criminal.displayColor,
         fillOpacity: 0.95,
       })
-        .bindPopup(
-          `<strong>${criminal.alias}</strong><br />Criminal<br />Threat: ${criminal.threatLevel}<br />Zone: ${criminal.districtName}`,
-        )
+        .bindTooltip(buildHoverProfileMarkup(criminal, 'criminal'), {
+          direction: 'top',
+          offset: [0, -12],
+          opacity: 1,
+          className: 'map-marker-tooltip',
+        })
         .addTo(criminalLayer)
     })
 
     map.invalidateSize()
   }, [mappedCriminals, mappedHeroes])
+
+  useEffect(() => {
+    const selectionLayer = selectionLayerRef.current
+    if (!selectionLayer) {
+      return
+    }
+
+    selectionLayer.clearLayers()
+
+    const normalizedPoint = normalizeMapPoint(draftPoint)
+    if (!normalizedPoint || !selectedAssignment) {
+      return
+    }
+
+    L.circleMarker(toPoint([normalizedPoint.y, normalizedPoint.x]), {
+      pane: 'selection',
+      radius: 11,
+      color: '#f8fafc',
+      weight: 3,
+      fillColor: assignmentType === 'hero' ? '#60a5fa' : '#fb7185',
+      fillOpacity: 0.95,
+    })
+      .bindPopup(`<strong>${selectedAssignment.alias}</strong><br />Pending map point`)
+      .addTo(selectionLayer)
+  }, [assignmentType, draftPoint, selectedAssignment])
+
+  const handleSavePoint = useCallback(async () => {
+    const normalizedPoint = normalizeMapPoint(draftPoint)
+    if (!selectedAssignment || !normalizedPoint) {
+      messageApi.error('Select a record and click the map to place a point first.')
+      return
+    }
+
+    try {
+      setSavingPoint(true)
+      const resourcePath = assignmentType === 'hero' ? 'heroes' : 'criminals'
+      const response = await authFetch(`/api/${resourcePath}/${selectedAssignment._id}/map-point`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mapPoint: normalizedPoint }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save map point')
+      }
+
+      await loadData()
+      messageApi.success(`${selectedAssignment.alias} map point saved.`)
+    } catch (error) {
+      messageApi.error(error.message)
+    } finally {
+      setSavingPoint(false)
+    }
+  }, [assignmentType, authFetch, draftPoint, loadData, messageApi, selectedAssignment])
+
+  const handleClearPoint = useCallback(async () => {
+    if (!selectedAssignment) {
+      return
+    }
+
+    try {
+      setSavingPoint(true)
+      const resourcePath = assignmentType === 'hero' ? 'heroes' : 'criminals'
+      const response = await authFetch(`/api/${resourcePath}/${selectedAssignment._id}/map-point`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mapPoint: null }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to clear map point')
+      }
+
+      setDraftPoint(null)
+      await loadData()
+      messageApi.success(`${selectedAssignment.alias} custom map point cleared.`)
+    } catch (error) {
+      messageApi.error(error.message)
+    } finally {
+      setSavingPoint(false)
+    }
+  }, [assignmentType, authFetch, loadData, messageApi, selectedAssignment])
 
   return (
     <div className="map-page">
@@ -233,7 +526,10 @@ export default function GothamMap({ heroes, criminals }) {
         <div className="map-panel">
           <div className="map-panel-block">
             <h4>Map Layers</h4>
-            <p>Base map uses `13.png`. Tactical district coloring comes from your `11.jpg` overlay.</p>
+            <p>
+              There are Two(2) maps currently in use. The Base map uses The High Level Map.png. Tactical district coloring comes from the Deatiled Map.png
+              overlay. Saved custom points override the district fallback for each record.
+            </p>
             <label className="map-range-label" htmlFor="overlayOpacity">
               Overlay opacity
             </label>
@@ -248,6 +544,52 @@ export default function GothamMap({ heroes, criminals }) {
               onChange={(event) => setOverlayOpacity(Number(event.target.value))}
             />
             <p>{Math.round(overlayOpacity * 100)}% overlay intensity</p>
+          </div>
+          <div className="map-panel-block">
+            <h4>Assign Exact Point</h4>
+            <p>Select a record, click any point on the map, then save that exact marker position.</p>
+            <div className="d-grid gap-2">
+              <select
+                className="form-select"
+                value={assignmentType}
+                onChange={(event) => setAssignmentType(event.target.value)}
+              >
+                <option value="hero">Hero</option>
+                <option value="criminal">Criminal</option>
+              </select>
+              <select
+                className="form-select"
+                value={assignmentId}
+                onChange={(event) => setAssignmentId(event.target.value)}
+              >
+                {assignmentOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="form-text">
+                {draftPoint
+                  ? `Pending point: x ${draftPoint.x}, y ${draftPoint.y}`
+                  : 'No custom point selected yet.'}
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!assignmentId || !draftPoint || savingPoint}
+                onClick={handleSavePoint}
+              >
+                {savingPoint ? 'Saving...' : 'Save Point'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-light"
+                disabled={!assignmentId || savingPoint}
+                onClick={handleClearPoint}
+              >
+                Clear Custom Point
+              </button>
+            </div>
           </div>
           <div className="map-panel-block">
             <h4>Live Totals</h4>
@@ -268,3 +610,18 @@ export default function GothamMap({ heroes, criminals }) {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

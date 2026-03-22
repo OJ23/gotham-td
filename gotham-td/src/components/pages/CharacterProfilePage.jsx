@@ -1,11 +1,15 @@
 import { Avatar, Button, Card, Descriptions, Space, Tag, Typography } from 'antd'
-import { ArrowLeftOutlined, UserOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, EditOutlined, UserOutlined } from '@ant-design/icons'
 
 const { Paragraph, Text, Title } = Typography
 
-export default function CharacterProfilePage({ result, onBackToRegistry }) {
+export default function CharacterProfilePage({ result, onBackToRegistry, onEditCharacter }) {
   const isHero = result.type === 'hero'
   const title = isHero ? 'Hero profile' : 'Criminal profile'
+  const creatorItem = result.character.createdByName
+    ? [{ key: 'createdBy', label: 'Created By', children: result.character.createdByName }]
+    : []
+
   const metaItems = isHero
     ? [
         { key: 'name', label: 'Name', children: result.character.name || 'Unknown' },
@@ -13,6 +17,7 @@ export default function CharacterProfilePage({ result, onBackToRegistry }) {
         { key: 'role', label: 'Role', children: result.character.role || 'Unassigned' },
         { key: 'power', label: 'Power', children: result.character.power || 'Unlisted' },
         { key: 'city', label: 'City', children: result.character.city || 'Gotham' },
+        ...creatorItem,
       ]
     : [
         { key: 'name', label: 'Name', children: result.character.name || 'Unknown' },
@@ -32,20 +37,31 @@ export default function CharacterProfilePage({ result, onBackToRegistry }) {
             </Tag>
           ),
         },
+        ...creatorItem,
       ]
 
   return (
     <div className="character-profile-page">
       <Card className="character-profile-card" variant="borderless">
         <Space direction="vertical" size={24} className="w-100">
-          <Button
-            type="default"
-            icon={<ArrowLeftOutlined />}
-            onClick={onBackToRegistry}
-            className="character-profile-back"
-          >
-            Back to {isHero ? 'heroes' : 'criminals'}
-          </Button>
+          <div className="character-profile-actions">
+            <Button
+              type="default"
+              icon={<ArrowLeftOutlined />}
+              onClick={onBackToRegistry}
+              className="character-profile-back"
+            >
+              Back to {isHero ? 'heroes' : 'criminals'}
+            </Button>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={onEditCharacter}
+              className="character-profile-edit"
+            >
+              Edit {isHero ? 'Hero' : 'Criminal'}
+            </Button>
+          </div>
 
           <div className="character-profile-hero">
             <div className="character-profile-media">
@@ -83,12 +99,7 @@ export default function CharacterProfilePage({ result, onBackToRegistry }) {
                 Case details
               </Title>
             </div>
-            <Descriptions
-              className="case-details-grid"
-              bordered
-              column={1}
-              items={metaItems}
-            />
+            <Descriptions className="case-details-grid" bordered column={1} items={metaItems} />
           </section>
         </Space>
       </Card>

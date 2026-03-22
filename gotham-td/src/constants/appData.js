@@ -7,6 +7,7 @@ export const initialHeroForm = {
   image: '',
   imagePublicId: '',
   city: 'Gotham',
+  mapPoint: null,
 }
 
 export const initialCriminalForm = {
@@ -18,6 +19,7 @@ export const initialCriminalForm = {
   image: '',
   imagePublicId: '',
   threatLevel: 'Medium',
+  mapPoint: null,
 }
 
 export const threatColors = {

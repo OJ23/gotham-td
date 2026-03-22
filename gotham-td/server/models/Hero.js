@@ -10,6 +10,12 @@ const heroSchema = new mongoose.Schema(
     image: { type: String, default: '' },
     imagePublicId: { type: String, default: '' },
     city: { type: String, default: 'Gotham' },
+    mapPoint: {
+      x: { type: Number, default: null },
+      y: { type: Number, default: null },
+    },
+    createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    createdByName: { type: String, default: '' },
   },
   { timestamps: true },
 )
