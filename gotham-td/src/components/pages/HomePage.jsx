@@ -8,6 +8,7 @@ export default function HomePage({
   homeCarouselSlides,
   homeCarouselIndex,
   setHomeCarouselIndex,
+  setIsHomeCarouselHovered,
   heroes,
   criminals,
   setActivePage,
@@ -48,7 +49,11 @@ export default function HomePage({
           </Text>
         </div>
         {homeCarouselSlides.length ? (
-          <div className="registry-carousel">
+          <div
+            className="registry-carousel"
+            onMouseEnter={() => setIsHomeCarouselHovered(true)}
+            onMouseLeave={() => setIsHomeCarouselHovered(false)}
+          >
             <div
               className="registry-carousel-track"
               style={{ transform: `translateX(-${homeCarouselIndex * 100}%)` }}

@@ -33,6 +33,7 @@ export default function RegistryWorkspace({
   const [collapsed, setCollapsed] = useState(true)
   const [activePage, setActivePage] = useState('home')
   const [homeCarouselIndex, setHomeCarouselIndex] = useState(0)
+  const [isHomeCarouselHovered, setIsHomeCarouselHovered] = useState(false)
   const [heroSearch, setHeroSearch] = useState('')
   const [criminalSearch, setCriminalSearch] = useState('')
   const [heroCityFilter, setHeroCityFilter] = useState('all')
@@ -102,6 +103,7 @@ export default function RegistryWorkspace({
     setCollapsed(true)
     setActivePage('home')
     setHomeCarouselIndex(0)
+    setIsHomeCarouselHovered(false)
     setHeroSearch('')
     setCriminalSearch('')
     setHeroCityFilter('all')
@@ -313,12 +315,16 @@ export default function RegistryWorkspace({
       return
     }
 
+    if (isHomeCarouselHovered) {
+      return
+    }
+
     const intervalId = window.setInterval(() => {
       setHomeCarouselIndex((prev) => (prev + 1) % homeCarouselSlides.length)
     }, 3600)
 
     return () => window.clearInterval(intervalId)
-  }, [homeCarouselSlides.length])
+  }, [homeCarouselSlides.length, isHomeCarouselHovered])
 
   const handleRegistrySearchSubmit = useCallback(() => {
     const query = registrySearch.trim()
@@ -396,6 +402,7 @@ export default function RegistryWorkspace({
           homeCarouselSlides={homeCarouselSlides}
           homeCarouselIndex={homeCarouselIndex}
           setHomeCarouselIndex={setHomeCarouselIndex}
+          setIsHomeCarouselHovered={setIsHomeCarouselHovered}
           heroes={heroes}
           criminals={criminals}
           setActivePage={setActivePage}
